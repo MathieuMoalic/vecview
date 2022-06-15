@@ -1,0 +1,20 @@
+{
+	"dx": 9.765625e-10,
+	"dy": 9.765625e-10,
+	"dz": 1.32e-8,
+	"Nx": 512,
+	"Ny": 512,
+	"Nz": 1,
+	"Tx": 5e-7,
+	"Ty": 5e-7,
+	"Tz": 1.32e-8,
+	"start_time": "Tue May 17 10:29:18 CEST 2022",
+	"end_time": "Tue May 17 10:53:42 CEST 2022",
+	"total_time": "24m23.906351881s",
+	"PBC": [
+		32,
+		32,
+		0
+	],
+	"gpu": "Tesla V100-SXM2-32GB(32510MB), CUDA Driver 11.2, cc=7.0"
+}

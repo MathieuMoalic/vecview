@@ -1,0 +1,80 @@
+//Amumax, fork of mumax 3.10 [linux_amd64 go1.17.7(gc) CUDA-10.2]
+//GPU info: Tesla V100-SXM2-32GB(32510MB), CUDA Driver 11.2, cc=7.0, using cc=70 PTX
+//output directory: 005.zarr/
+lattice_param := 500e-9
+ring_size := 49e-9
+ad_size := 200e-9
+PBC := 32
+Tx := 500.00000e-9
+Ty := 500.00000e-9
+Tz := 13.20000e-9
+Nx := 512
+Ny := 512
+Nz := 1
+setgridsize(Nx, Ny, Nz)
+setcellsize(Tx/Nx, Ty/Ny, Tz/Nz)
+setpbc(PBC, PBC, 0)
+//resizing...
+edgesmooth = 3
+msat = 810e3
+aex = 13e-12
+ku1 = 453195
+anisu = vector(0, 0, 1)
+alpha = 1e-7
+gammall = 187e9
+ad := circle(ad_size)
+ring := circle(ad_size + ring_size*2)
+rings := ring
+ads := ad
+m.setinshape(ring, vortex(1, 1))
+bulk := universe().sub(rings).sub(ads)
+m.setInShape(bulk, uniform(0, 0, 1))
+defregion(201, rings)
+defregion(202, ads)
+defregion(203, bulk)
+ku1.setregion(201, 0)
+setgeom(bulk.add(rings).sub(ads))
+phi := 0.0001 * pi / 180
+theta := 0.0001 * pi / 180
+B0 := 0.005
+B_ext = vector(B0*sin(theta)*cos(phi), B0*sin(theta)*sin(phi), B0*cos(theta))
+maxerr = 4e-5
+minimizerstop = 1e-7
+relax()
+minimize()
+setsolver(5)
+maxdt = 1.42e-12
+mindt = 1e-14
+maxerr = 1e-7
+amps := 5e-3
+f_cut := 20e9
+t_sampl := 0.5 / (f_cut * 1.5)
+t0 := t + 10/f_cut
+grainSize := 20e-9
+randomSeed := 1234567
+maxRegion := 60
+ext_makegrains(grainSize, maxRegion, randomSeed)
+for i := 0; i < maxRegion; i++ {
+	b := (rand() - 0.5) * 0.2 / f_cut
+	B_ext.setregion(i, vector(B0*sin(theta)*cos(phi)+amps*sinc(2*pi*f_cut*(t-t0+b)), B0*sin(theta)*sin(phi)+amps*sinc(2*pi*f_cut*(t-t0+b)), B0*cos(theta)))
+	defregion(i+maxRegion, ShapeFromRegion(i).intersect(ring))
+	Ku1.SetRegion(i+maxRegion, 0)
+}
+saveas(m, "stable")
+saveas(regions, "regions")
+saveas(ku1, "ku1")
+saveas(torque, "torque")
+saveas(b_ext, "b_ext")
+saveas(b_demag, "b_demag")
+saveas(b_eff, "b_eff")
+run(20 / f_cut)
+B_ext.RemoveExtraTerms()
+B_ext = vector(B0*sin(theta)*cos(phi), B0*sin(theta)*sin(phi), B0*cos(theta))
+run(5 / f_cut)
+t = 0
+tableadd(m)
+tableadd(B_ext)
+tableautosave(t_sampl)
+autosave(m, t_sampl)
+run(1000 * t_sampl)
+//**************** Simulation Ended ******************//
